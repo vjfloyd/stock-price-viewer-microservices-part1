@@ -35,8 +35,8 @@ public class DbServiceApplication {
 	        // BasicDataSource newds = (BasicDataSource) dataSource;
 	        // System.out.println("BasicDataSource = " + newds.getInitialSize());
 
-	        System.out.println("Display all customers...");
-	        List<CAT_MCREDENCIAL> list = customRepository.listaAll();
+	        System.out.println("Display ..");
+	        List<CAT_MCREDENCIAL> list = customRepository.listDataTablesBK();
 	        list.forEach(x -> System.out.println(x));
 
 	        System.out.println("Done!");
