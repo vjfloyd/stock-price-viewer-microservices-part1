@@ -25,12 +25,9 @@ public class CustomRepository {
 	        System.out.println(row.values());
 	    }  
 	}
-	
-
-	
-	 public JdbcTemplate getJdbcTemplate() {
+	public JdbcTemplate getJdbcTemplate() {
 	        return jdbcTemplate;
-	    }
+	}
 	public List<CAT_MCREDENCIAL> listDataTablesBK() {
 		  List<CAT_MCREDENCIAL> result = jdbcTemplate.query("SELECT mcred_id, mcred_fecha_emision , mcred_estadocred, mcred_tipocred from PGC.CAT_MCREDENCIAL",
 	                (rs, rowNum) -> new CAT_MCREDENCIAL(rs.getString("mcred_id"),
@@ -54,22 +51,5 @@ public class CustomRepository {
 		}
 		return fields.toString();
 	}
-	
-	public static boolean validarListaNotEmpty(List<?> ... listArray) {
-		boolean flagListaNotEmpty = false;
-		if (listArray != null) {
-			for (List<?> list : listArray) {
-				if (list != null && !list.isEmpty()) {
-					flagListaNotEmpty = true;
-				}
-				else {
-					flagListaNotEmpty = false;
-					break;
-				}
-			}
-		}
-		return flagListaNotEmpty;
-	}
-	
 	
 }

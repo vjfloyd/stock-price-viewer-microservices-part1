@@ -1,0 +1,3 @@
+create table PGC.CAT_MCREDENCIAL(MCRED_ID  integer,MCRED_FECHA_TERMINO varchar(20),MCRED_ESTADOCRED varchar(10));
+create table PGC.CAT_MCARGO (MCARG_ID integer,MCARG_NOMBRE varchar(20),MCARG_ESTADO varchar(10));
+

@@ -6,8 +6,16 @@ import com.ennel.qr.model.CAT_MCREDENCIAL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -21,45 +29,82 @@ public class DbServiceResource {
 	@Autowired
 	private CustomRepository customRepository;
 	
-	
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
 	
-	public void listDataTables(Table table) {
+	public List<String> listDataTables(Table table) {
 		String qarg0 = " SELECT ";
 		String qarg2 = " FROM ";
 		String query = qarg0 + table.getTableFields() + qarg2 + table.getTableName();
 		List<Map<String, Object>> list = jdbcTemplate.queryForList(query);
+		List<String> dataInserts = new ArrayList<>();  
 	    for (Map<String, Object> row : list) {
-	       // String values = row.values();
-	    	String value = row.values().toString();
+	       String value = row.values().toString();
 	    	value = value.replace("[", "(");
 	    	value = value.replace("]", ")");
-	    	System.out.println("val="+value);
-	        
+	    	dataInserts.add(value);
 	    }  
+	    return dataInserts;
 	}
 	
     @GetMapping("/test2")
     public String readTablesfromBD_test() {
         System.out.println("Display .");
-//        List<CAT_MCREDENCIAL> list = customRepository.listDataTablesTest();
-//        list.forEach(x -> System.out.println("ID" +x.mcred_id + "FECHA" + x.mcred_id + " ESTADO " + x.mcred_estadocred));
         String tableModel_file = "tableModel.txt";
         System.out.println("TABLES=>"+tableModel_file);
         List<Table> listTables = getTableNames("tableModel.txt");
-        String sentenceQ1 = "insert into ";
-        String sentenceQ3 = " value(";
-        String sentenceQ5 = ");";
+        String sentenceQ1 = "INSERT INTO ";
+        String sentenceQ3 = " VALUE ";
+        String sentenceQ5 = ";";
         String sentenceInsert = "";
+        StringBuilder queryBD = new StringBuilder(); 
         for (int i = 0; i < listTables.size(); i++) {
-        	sentenceInsert = sentenceQ1 + listTables.get(i).getTableName() + sentenceQ3+ listTables.get(i).getTableFields() + sentenceQ5;
-        	listDataTables(listTables.get(i));
-        	System.out.println("insert -> " + sentenceInsert);
+        	for (int j = 0; j < listDataTables(listTables.get(i)).size() ; j++) {
+        		sentenceInsert = sentenceQ1 + listTables.get(i).getTableName() + 
+        				sentenceQ3+ listDataTables(listTables.get(i)).get(j) + sentenceQ5;
+        		queryBD = queryBD.append(sentenceInsert).append("\n");
+        		//System.out.println("==>" + sentenceInsert);
+            }
         }
+        writeDataQuery(queryBD.toString());
         return "PROCESANDO...";
     }
     
+    public static void createSQLITEDatabase(String fileName) {
+    	String url = "jdbc:sqlite:D:/ENNEL/DB/SQLITE/" + fileName;
+    	try (Connection conn = DriverManager.getConnection(url)) {
+            if (conn != null) {
+                DatabaseMetaData meta = conn.getMetaData();
+                System.out.println("Drive name " + meta.getDriverName());
+                System.out.println("DB created");
+            }
+    	} catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+    
+    public void writeDataQuery(String content) {
+    	String FILENAME = "D:\\ENNEL\\DB\\enelDB.txt";
+    	BufferedWriter bw = null;
+		FileWriter fw = null;
+		try {
+			fw = new FileWriter(FILENAME);
+			bw = new BufferedWriter(fw);
+			bw.write(content);
+			System.out.println("Fin");
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (bw != null)
+					bw.close();
+				if (fw != null)
+					fw.close();
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
+		}
+    }
     /*
      * 1. read table names from tablaModel.txt
      * 2. get data from these tables with select sentence
@@ -69,19 +114,7 @@ public class DbServiceResource {
      * 5. make this file readable for ionic app
      * 
      * */
-    
-    
- 
-    @GetMapping("/datasync")
-    public String dataSync() {
-        String tb_cat_credencia = "PGC.CAT_MCREDENCIAL";
-        String tb_cat_cargo = "PGC.CAT_MCARGO";
-        
-        
-        return "";
-    }
-    
-   
+  
     private List<Table> getTableNames(String fileName) {
     	ClassLoader classLoader = getClass().getClassLoader();
     	File file = new File(classLoader.getResource(fileName).getFile());
