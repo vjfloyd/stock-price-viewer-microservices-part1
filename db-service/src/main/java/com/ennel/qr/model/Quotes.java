@@ -1,4 +1,4 @@
-package com.techprimers.stock.dbservice.model;
+package com.ennel.qr.model;
 
 import java.util.List;
 

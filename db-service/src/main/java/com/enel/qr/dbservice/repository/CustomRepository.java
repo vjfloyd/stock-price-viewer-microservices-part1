@@ -1,0 +1,26 @@
+package com.enel.qr.dbservice.repository;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Repository;
+
+import com.ennel.qr.model.CAT_MCREDENCIAL;
+
+@Repository
+public class CustomRepository {
+
+	@Autowired
+	private JdbcTemplate jdbcTemplate;
+	
+	public List<CAT_MCREDENCIAL> listaAll() {
+		  List<CAT_MCREDENCIAL> result = jdbcTemplate.query("SELECT mcred_id, mcred_fecha_emision , mcred_estadocred, mcred_tipocred from PGC.CAT_MCREDENCIAL",
+	                (rs, rowNum) -> new CAT_MCREDENCIAL(rs.getString("mcred_id"),
+	                        rs.getString("mcred_fecha_emision"), rs.getString("mcred_estadocred"),rs.getString("mcred_tipocred"))
+	        );
+
+	    return result;
+
+	}
+}
