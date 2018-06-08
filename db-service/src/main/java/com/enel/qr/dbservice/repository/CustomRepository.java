@@ -33,13 +33,7 @@ public class CustomRepository {
 	                (rs, rowNum) -> new CAT_MCREDENCIAL(rs.getString("mcred_id"),
 	                        rs.getString("mcred_fecha_emision"), rs.getString("mcred_estadocred"),rs.getString("mcred_tipocred"))
 	        );
-		  
-//		  List<CAT_MCREDENCIAL> result = jdbcTemplate.query("SELECT mcred_id, mcred_fecha_emision , mcred_estadocred, mcred_tipocred from PGC.CAT_MCREDENCIAL",
-//	                (rs, rowNum) -> new CAT_MCREDENCIAL(rs.getString("mcred_id"),
-//	                        rs.getString("mcred_fecha_emision"), rs.getString("mcred_estadocred"),rs.getString("mcred_tipocred"))
-//	        );
 	    return result;
-
 	}
 	
 	public static String buildTableFields(List<String> ... listArray) {
