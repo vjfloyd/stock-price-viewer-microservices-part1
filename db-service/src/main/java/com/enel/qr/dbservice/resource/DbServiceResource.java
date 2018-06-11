@@ -20,6 +20,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -39,18 +40,21 @@ public class DbServiceResource {
 	public List<String> listDataTables(Table table) {
 		String qarg0 = " SELECT ";
 		String qarg2 = " FROM ";
+		String qarq3 = "  WHERE ROWNUM < 501";
 		//PGC.CAT_MCARGO;MCARG_ID-int,MCARG_NOMBRE-string,MCARG_ESTADO-int
 		//PGC.CAT_MCARGO;MCARG_ID,MCARG_NOMBRE,MCARG_ESTADO;int,string,int
-		String query = qarg0 + table.getTableFields() + qarg2 + table.getEsquema().concat(".") + table.getTableName();
+		String query = qarg0 + table.getTableFields() + qarg2 + table.getEsquema().concat(".") + table.getTableName() + qarq3;
 		List<Map<String, Object>> list = jdbcTemplate.queryForList(query);
 		List<String> dataInserts = new ArrayList<>();  
 	    for (Map<String, Object> row : list) {
 	        String value = row.values().toString();
-	    	value = value.replace("[", "");
+//	    	value = value.replace("[", "");
+//	    	value = value.replace("]", "");
+	        value = value.replace("[", "");
 	    	value = value.replace("]", "");
 	    	String[] dataValue = value.split(",");
 	        value = putFieldFormat(table,dataValue);
-	        System.out.println("insert==>"+ value);
+	        //System.out.println("insert==>"+ value);
 	    	dataInserts.add(value);
 	    } 
 	    return dataInserts;
@@ -60,22 +64,25 @@ public class DbServiceResource {
 		String[] dataTypes = table.getDataType().split(",");
 		StringBuilder insert = new StringBuilder();
 		for (int i = 0; i < dataTypes.length  ; i++) {
-			if(dataTypes[i].equalsIgnoreCase("string")) {
-				dataValue[i] = "'" + dataValue[i].trim() + "'";
-				insert.append(dataValue[i]).append(",");
-				System.out.println("valor = "+dataValue[i]);
-			}else {
-				dataValue[i]  = dataValue[i].trim();
-				insert.append(dataValue[i]).append(",");
-			}
+//			if(dataTypes[i].equalsIgnoreCase("string")) {
+//				dataValue[i] = "'" + dataValue[i].trim() + "'";
+//				insert.append(dataValue[i]).append(",");
+//			}else {
+//				dataValue[i]  = dataValue[i].trim();
+//				insert.append(dataValue[i]).append(",");
+//			}
+			dataValue[i] = "'" + dataValue[i].trim() + "'";
+			insert.append(dataValue[i]).append(",");
 		}
+		
+		
 		String value = "("+insert.toString().substring(0,insert.length()-1) + ")";
 		return value;
 	}
 
 	
 	
-    @GetMapping("/test2")
+    @GetMapping("/sync")
     public String readTablesfromBD_test() {
         System.out.println("Display .");
         String tableModel_file = "tableModel.txt";
@@ -93,18 +100,25 @@ public class DbServiceResource {
         String sentenceQ5 = ";";
         String sentenceInsert = "";
         StringBuilder queryBD = new StringBuilder(); 
-      
         int tablesNumber = listTables.size();
+        List<String> listInsert = new ArrayList<>();
+        int c =  0;
         for (int i = 0; i < tablesNumber; i++) {
-        	System.out.println("---------------------------->");
         	for (int j = 0; j < listDataTables(listTables.get(i)).size() ; j++) {
         		sentenceInsert = sentenceQ1 + listTables.get(i).getTableName() + 
         				sentenceQ3+ listDataTables(listTables.get(i)).get(j) + sentenceQ5;
-        		executeSQL(sentenceInsert);
+        		//executeSQL(sentenceInsert);
+        		listInsert.add(sentenceInsert);
+        		c++;
+        		System.out.println("cont==>"+ c +"insert==>"+ sentenceInsert);
+        		
         		//queryBD = queryBD.append(sentenceInsert).append("\n");
-        		System.out.println("==>" + sentenceInsert);
+        		//System.out.println("==>" + sentenceInsert);
             }
         }
+        
+        batchInsert(connect(),listInsert);
+        
         //writeDataQuery(queryBD.toString());
         return "PROCESANDO...";
     }
@@ -114,12 +128,29 @@ public class DbServiceResource {
     	try (Connection conn = DriverManager.getConnection(url)) {
             if (conn != null) {
                 DatabaseMetaData meta = conn.getMetaData();
-                System.out.println("Drive name " + meta.getDriverName());
+                //System.out.println("Drive name " + meta.getDriverName());
                 System.out.println("DB created");
             }
     	} catch (SQLException e) {
             System.out.println(e.getMessage());
         }
+    }
+    
+    public void batchInsert(Connection con, List<String> queries) {
+    	 Connection connection = con;
+    	    Statement statement;
+			try {
+				statement = connection.createStatement();
+				for (String query : queries) {
+	    	    	statement.addBatch(query);
+	    	    }
+	    	    statement.executeBatch();
+	    	    statement.close();
+	    	    connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+    	    System.out.println("DB created");
     }
     
     private Connection connect() {
@@ -138,6 +169,7 @@ public class DbServiceResource {
         	PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.executeUpdate();
         } catch (SQLException e) {
+        	
             System.out.println(e.getMessage());
         }
     }
